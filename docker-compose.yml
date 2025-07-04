@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    # restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - ./src/db/postgresql_data:/var/lib/postgresql/data
+# Rails
+  web:
+    # カレントディレクトリのDockerfileを参照
+    build: .
+    # railsのサーバを起動。ポート番号は3000番で、バインドは0.0.0.0
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      # ローカルのsrcディレクトリ以下のファイルをDockerコンテナ内のappに同期
+      - ./src:/app
+    ports:
+      # ローカルの3000番ポートをDocker側の3000番ポートに接続
+      - "3000:3000"
+    depends_on:
+      # webはdbサービスに依存している（これを書かない場合、RailsからMySQLに接続する時にIPアドレスを直接しなければならない）
+      - db 
+
